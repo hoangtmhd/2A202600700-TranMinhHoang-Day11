@@ -65,32 +65,41 @@ class ConfidenceRouter:
         Returns:
             RoutingDecision with routing action and metadata
         """
-        # TODO 12: Implement routing logic
-        #
         # 1. Check if action_type is in HIGH_RISK_ACTIONS
-        #    -> If yes: always escalate (action="escalate", priority="high",
-        #       requires_human=True, reason="High-risk action: {action_type}")
-        #
-        # 2. Check confidence thresholds:
-        #    - confidence >= 0.9:
-        #      action="auto_send", priority="low",
-        #      requires_human=False, reason="High confidence"
-        #
-        #    - 0.7 <= confidence < 0.9:
-        #      action="queue_review", priority="normal",
-        #      requires_human=True, reason="Medium confidence — needs review"
-        #
-        #    - confidence < 0.7:
-        #      action="escalate", priority="high",
-        #      requires_human=True, reason="Low confidence — escalating"
+        if action_type in HIGH_RISK_ACTIONS:
+            return RoutingDecision(
+                action="escalate",
+                confidence=confidence,
+                reason=f"High-risk action: {action_type}",
+                priority="high",
+                requires_human=True,
+            )
 
-        return RoutingDecision(
-            action="auto_send",
-            confidence=confidence,
-            reason="TODO: implement routing logic",
-            priority="low",
-            requires_human=False,
-        )  # TODO: Replace with implementation
+        # 2. Check confidence thresholds
+        if confidence >= self.HIGH_THRESHOLD:
+            return RoutingDecision(
+                action="auto_send",
+                confidence=confidence,
+                reason="High confidence",
+                priority="low",
+                requires_human=False,
+            )
+        elif confidence >= self.MEDIUM_THRESHOLD:
+            return RoutingDecision(
+                action="queue_review",
+                confidence=confidence,
+                reason="Medium confidence — needs review",
+                priority="normal",
+                requires_human=True,
+            )
+        else:
+            return RoutingDecision(
+                action="escalate",
+                confidence=confidence,
+                reason="Low confidence — escalating",
+                priority="high",
+                requires_human=True,
+            )
 
 
 # ============================================================
@@ -109,27 +118,27 @@ class ConfidenceRouter:
 hitl_decision_points = [
     {
         "id": 1,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Yêu cầu chuyển tiền số lượng lớn (> 50,000,000 VND)",
+        "trigger": "Người dùng yêu cầu giao dịch chuyển tiền vượt hạn mức tự động hoặc có yếu tố nghi ngờ.",
+        "hitl_model": "human-in-the-loop",
+        "context_needed": "Chi tiết giao dịch (nguồn, đích, số tiền), lịch sử giao dịch gần đây của người dùng, điểm tin cậy của thiết bị.",
+        "example": "Người dùng yêu cầu chuyển 100,000,000 VND sang tài khoản lạ vào lúc 2 giờ sáng.",
     },
     {
         "id": 2,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Yêu cầu thay đổi thông tin cá nhân nhạy cảm",
+        "trigger": "Thay đổi mật khẩu, số điện thoại liên kết hoặc yêu cầu đóng tài khoản ngân hàng.",
+        "hitl_model": "human-in-the-loop",
+        "context_needed": "Thông tin cá nhân cũ và mới, lịch sử đăng nhập gần đây, tài liệu xác minh danh tính (CCCD upload).",
+        "example": "Người dùng yêu cầu đổi số điện thoại OTP sang một số điện thoại mới chưa từng đăng ký.",
     },
     {
         "id": 3,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Hành vi hội thoại bất thường nghi ngờ tấn công Prompt Injection",
+        "trigger": "Hệ thống phát hiện điểm tin cậy hội thoại giảm sâu hoặc có chuỗi ký tự bất thường (Base64, mã hóa).",
+        "hitl_model": "human-on-the-loop",
+        "context_needed": "Lịch sử hội thoại đầy đủ của phiên làm việc, các mẫu prompt nghi ngờ, kết quả phân tích từ các lớp guardrails.",
+        "example": "Người dùng liên tục gửi các chuỗi ký tự mã hóa Base64 yêu cầu bot dịch sang tiếng Việt để trích xuất prompt hệ thống.",
     },
 ]
 
