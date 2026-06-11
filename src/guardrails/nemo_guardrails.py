@@ -177,6 +177,9 @@ def init_nemo():
         print("Skipping NeMo init — nemoguardrails not installed.")
         return None
 
+    import os
+    os.environ["NEMOGUARDRAILS_LLM_FRAMEWORK"] = "langchain"
+
     config = RailsConfig.from_content(
         yaml_content=NEMO_YAML_CONFIG,
         colang_content=COLANG_CONFIG,
