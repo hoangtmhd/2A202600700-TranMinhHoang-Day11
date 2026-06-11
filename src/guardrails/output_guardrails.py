@@ -181,13 +181,16 @@ class OutputGuardrailPlugin(base_plugin.BasePlugin):
 
         # 2. If use_llm_judge: call llm_safety_check(response_text)
         if self.use_llm_judge:
-            judge_result = await llm_safety_check(response_text)
-            if not judge_result["safe"]:
-                self.blocked_count += 1
-                llm_response.content = types.Content(
-                    role="model",
-                    parts=[types.Part.from_text(text="I cannot provide that information due to safety policies.")]
-                )
+            try:
+                judge_result = await llm_safety_check(response_text)
+                if not judge_result["safe"]:
+                    self.blocked_count += 1
+                    llm_response.content = types.Content(
+                        role="model",
+                        parts=[types.Part.from_text(text="I cannot provide that information due to safety policies.")]
+                    )
+            except Exception as e:
+                print(f"WARNING: LLM Judge failed: {e}. Defaulting to allow.")
 
         return llm_response
 
